@@ -1,0 +1,58 @@
+@startuml Voxcox components
+
+node "Client (Input)" {
+  () "PCM" as PCM1
+  note left of PCM1 : Pulse-code modulation
+  [Mic in] - PCM1
+  PCM1 - [Equalizer]
+  () "PCM" as PCM2
+  [Equalizer] - PCM2
+  [Codec] as ClientOutCodec
+  PCM2 - ClientOutCodec
+  () "Binary" as BIN1
+  ClientOutCodec - BIN1
+  [Transport] as ClientOutboundT
+  BIN1 - ClientOutboundT
+  note right of ClientOutboundT : UDP transport
+}
+
+node "Server" {
+  [Inbound transport] as ClientToSrvTransportRcv
+  () "Binary" as BIN2
+  ClientToSrvTransportRcv - BIN2
+  [Codec] as ServerInCodec
+  BIN2 - ServerInCodec
+  () "PCM" as PCM3
+  ServerInCodec - PCM3
+  () "PCM" as PCM5
+  note right of PCM5 : Input stream from another client
+  PCM5 -down-> [Multiplexer]
+  PCM3 -> [Multiplexer]
+  note right of [Multiplexer] : Generates streams for each client
+  () "...PCM" as PCM4
+  [Multiplexer] -down-> PCM4
+  () "PCM" as PCM6
+  [Multiplexer] -down-> PCM6
+  [Codec] as ServerOutCodec
+  PCM6 -down-> ServerOutCodec
+  () "Binary" as BIN3
+  ServerOutCodec - BIN3
+  [Outbound transport] as SrvOutboundT
+  BIN3 -> SrvOutboundT
+}
+
+
+node "Client (Output)" {
+  () "Binary" as BIN4
+  [Transport] as ClientInboundT
+  ClientInboundT - BIN4
+  [Codec] as ClientInCodec
+  BIN4 - ClientInCodec
+  () "PCM" as PCM7
+  ClientInCodec - PCM7
+  PCM7 - [Speaker]
+}
+
+ClientOutboundT -down-> ClientToSrvTransportRcv
+SrvOutboundT -down-> ClientInboundT
+@enduml
