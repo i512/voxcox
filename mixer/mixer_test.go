@@ -25,7 +25,7 @@ func TestMixTwoFile(t *testing.T) {
 	voice1, err1 := os.Open("../samples/Spanish vocal phrase dollars-.wav")
 	defer voice1.Close()
 
-	voice2, err2 := os.Open("../samples/Spanish vocal phrase.wav")
+	voice2, err2 := os.Open("../samples/Telephone prompt poss.wav")
 	defer voice2.Close()
 
 	if err1 != nil || err2 != nil {
