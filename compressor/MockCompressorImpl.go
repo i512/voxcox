@@ -4,7 +4,7 @@ package compressor
 type MockCompressorImpl struct {
 }
 
-//Just return same value
-func (m MockCompressorImpl) compress(notCompressedSound []int) []int {
+//Compress just return same value
+func (m MockCompressorImpl) Compress(notCompressedSound int) int {
 	return notCompressedSound
 }

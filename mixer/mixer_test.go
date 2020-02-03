@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/NIHERASE/voxcox/compressor"
 	"github.com/go-audio/audio"
 	"github.com/go-audio/wav"
 )
@@ -14,7 +15,10 @@ func TestOkCase(t *testing.T) {
 	voice2 := new(audio.IntBuffer)
 	joinedVoices := new(audio.IntBuffer)
 
-	err := compare(voice1, voice2, joinedVoices)
+	mixer := new(Mixer)
+	mixer.audioCompressor = new(compressor.MockCompressorImpl)
+
+	err := mixer.Compare(voice1, voice2, joinedVoices)
 
 	if err != nil {
 		t.Errorf("Test for Ok failed")
@@ -41,12 +45,8 @@ func TestMixTwoFile(t *testing.T) {
 		t.Errorf("i can't extract buffer from file")
 	}
 
-	// maxSoundLen := 0
 	bufferIndex := 0
-	if len(buffer1.Data) > len(buffer2.Data) {
-		// maxSoundLen = len(buffer1.Data)
-	} else {
-		// maxSoundLen = len(buffer2.Data)
+	if len(buffer1.Data) < len(buffer2.Data) {
 		bufferIndex = 1
 	}
 
