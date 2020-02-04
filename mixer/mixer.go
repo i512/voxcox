@@ -1,41 +1,101 @@
 package mixer
 
 import (
-	"errors"
-
 	"github.com/NIHERASE/voxcox/compressor"
-	"github.com/go-audio/audio"
 )
 
 //Mixer compare voice streams
 type Mixer struct {
-	comapreBlockSize int
-	audioCompressor  compressor.Compressor
+	audioCompressor compressor.Compressor
+	voice1          VoiceBit
+	voice2          VoiceBit
+	outputChanel    chan<- int
 }
 
-//Compare two voices to one IntBuffer
-func (m *Mixer) Compare(voice1, voice2, joinedVoices *audio.IntBuffer) error {
-
-	if voice1 == nil || voice2 == nil || joinedVoices == nil {
-		return errors.New("buffer's must be not nil")
-	}
-
-	if len(voice1.Data) != len(voice2.Data) && len(voice1.Data) != len(joinedVoices.Data) {
-		return errors.New("voice buffer's must be equivalent lenght")
-	}
-
-	for i := 0; i < len(voice1.Data); i++ {
-		joinedVoices.Data[i] = voice1.Data[i] + voice2.Data[i]
-	}
-
-	return nil
+//VoiceBit use for storage value of voice in per time
+type VoiceBit struct {
+	volume   int
+	received bool
 }
 
-func (m *Mixer) simpleDataCompare(voiceBlock1, voiceBlock2 []int) []int {
-	maxLen := len(voiceBlock2)
-	for i := 0; i < maxLen; i++ {
-		voiceBlock1[i] = m.audioCompressor.Compress(voiceBlock1[i] + voiceBlock2[i])
+//Compare two voices to one
+func (m *Mixer) Compare(chanVoice1, chanVoice2, exit chan int, joinedVoices chan<- int) {
+
+	m.outputChanel = joinedVoices
+
+	if m.audioCompressor == nil {
+		panic("audio compressor must be initialized")
 	}
 
-	return voiceBlock1
+	for true {
+		select {
+		case bitChanVoice1 := <-chanVoice1:
+			if m.voice1.received {
+				m.sendOneChanelIfAlreadyRecived()
+			}
+			m.setRecivedVoice1(bitChanVoice1)
+		case bitChanVoice2 := <-chanVoice2:
+			if m.voice2.received {
+				m.sendOneChanelIfAlreadyRecived()
+			}
+			m.setRecivedVoice2(bitChanVoice2)
+		case <-exit:
+			return
+		default:
+			m.emptyVoiceFiller()
+		}
+
+		if m.isReadyToCompare() {
+			m.sendComparedVoice()
+		}
+
+	}
+}
+
+func (m *Mixer) sendOneChanelIfAlreadyRecived() {
+	m.emptyVoiceFiller()
+	m.sendComparedVoice()
+}
+
+func (m *Mixer) sendComparedVoice() {
+	m.outputChanel <- m.compareWithCompressor(m.voice1.volume, m.voice2.volume)
+	m.setAllToUnrecived()
+}
+func (m *Mixer) isReadyToCompare() bool {
+	return m.voice1.received && m.voice2.received
+}
+
+func (m *Mixer) compareWithCompressor(bitVoice1, bitVoice2 int) int {
+	return m.audioCompressor.Compress(bitVoice1 + bitVoice2)
+}
+
+func (m *Mixer) emptyVoiceFiller() {
+	if !m.voice1.received {
+		m.setRecivedVoice1(0)
+	}
+
+	if !m.voice2.received {
+		m.setRecivedVoice2(0)
+	}
+}
+
+func (m *Mixer) setRecivedVoice1(volume int) {
+	m.voice1.volume = volume
+	m.voice1.received = true
+}
+
+func (m *Mixer) setRecivedVoice2(volume int) {
+	m.voice2.volume = volume
+	m.voice2.received = true
+}
+func (m *Mixer) setAllToUnrecived() {
+	m.setUnrecivedVoice1()
+	m.setUnrecivedVoice2()
+}
+func (m *Mixer) setUnrecivedVoice1() {
+	m.voice1.received = false
+}
+
+func (m *Mixer) setUnrecivedVoice2() {
+	m.voice2.received = false
 }

@@ -4,26 +4,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/NIHERASE/voxcox/compressor"
 	"github.com/go-audio/audio"
 	"github.com/go-audio/wav"
 )
-
-func TestOkCase(t *testing.T) {
-
-	voice1 := new(audio.IntBuffer)
-	voice2 := new(audio.IntBuffer)
-	joinedVoices := new(audio.IntBuffer)
-
-	mixer := new(Mixer)
-	mixer.audioCompressor = new(compressor.MockCompressorImpl)
-
-	err := mixer.Compare(voice1, voice2, joinedVoices)
-
-	if err != nil {
-		t.Errorf("Test for Ok failed")
-	}
-}
 
 func TestMixTwoFile(t *testing.T) {
 	voice1, err1 := os.Open("../samples/Spanish vocal phrase dollars-.wav")
