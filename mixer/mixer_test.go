@@ -4,9 +4,68 @@ import (
 	"os"
 	"testing"
 
+	"github.com/NIHERASE/voxcox/compressor"
+
 	"github.com/go-audio/audio"
 	"github.com/go-audio/wav"
 )
+
+func TestOneChanelInput(t *testing.T) {
+	ch1 := make(chan int)
+	ch2 := make(chan int)
+	exit := make(chan int)
+	exit2 := make(chan int)
+
+	output := make(chan int, 1000)
+
+	m := new(Mixer)
+	compressor := new(compressor.MockCompressorImpl)
+	m.audioCompressor = compressor
+
+	voice1, err1 := os.Open("../samples/Spanish vocal phrase.wav")
+	defer voice1.Close()
+
+	if err1 != nil {
+		t.Errorf("file not exist's")
+	}
+
+	decoder1 := wav.NewDecoder(voice1)
+	buffer1, err1 := decoder1.FullPCMBuffer()
+
+	if err1 != nil {
+		t.Errorf("i can't extract buffer from file")
+	}
+
+	go saveChanToFile(output, exit2, buffer1, t)
+	go m.Compare(ch1, ch2, exit, output)
+
+	i := 0
+	for ; i < len(buffer1.Data); i++ {
+		ch1 <- buffer1.Data[i]
+	}
+
+	exit <- 1
+	exit2 <- 1
+
+}
+
+func saveChanToFile(input, exit chan int, buffer *audio.IntBuffer, t *testing.T) {
+	work := true
+	var data []int
+
+	for work {
+		select {
+		case in := <-input:
+			data = append(data, in)
+		case <-exit:
+			work = false
+		}
+	}
+	buffer.Data = data
+
+	simpleSaveToFile(buffer, t)
+
+}
 
 func TestMixTwoFile(t *testing.T) {
 	voice1, err1 := os.Open("../samples/Spanish vocal phrase dollars-.wav")
