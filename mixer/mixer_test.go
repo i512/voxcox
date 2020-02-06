@@ -47,6 +47,8 @@ func TestOneChanelInput(t *testing.T) {
 	exit <- 1
 	exit2 <- 1
 
+	<-exit2
+
 }
 
 func saveChanToFile(input, exit chan int, buffer *audio.IntBuffer, t *testing.T) {
@@ -65,6 +67,7 @@ func saveChanToFile(input, exit chan int, buffer *audio.IntBuffer, t *testing.T)
 
 	simpleSaveToFile(buffer, t)
 
+	exit <- 1
 }
 
 func TestMixTwoFile(t *testing.T) {

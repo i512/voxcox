@@ -42,7 +42,7 @@ func (m *Mixer) Compare(chanVoice1, chanVoice2, exit chan int, joinedVoices chan
 		case <-exit:
 			return
 		default:
-			m.emptyVoiceFiller()
+
 		}
 
 		if m.isReadyToCompare() {
