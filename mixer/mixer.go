@@ -27,26 +27,34 @@ func (m *Mixer) Compare(chanVoice1, chanVoice2, exit chan int, joinedVoices chan
 		panic("audio compressor must be initialized")
 	}
 
-	for true {
+	for chanVoice1 != nil || chanVoice2 != nil {
 		select {
-		case bitChanVoice1 := <-chanVoice1:
-			if m.voice1.received {
-				m.sendOneChanelIfAlreadyRecived()
+		case bitChanVoice1, ok := <-chanVoice1:
+			if ok {
+				m.setRecivedVoice1(bitChanVoice1)
+				m.waitAnotherChan(chanVoice2, &m.voice2)
+			} else {
+				chanVoice1 = nil
 			}
-			m.setRecivedVoice1(bitChanVoice1)
-		case bitChanVoice2 := <-chanVoice2:
-			if m.voice2.received {
-				m.sendOneChanelIfAlreadyRecived()
+		case bitChanVoice2, ok := <-chanVoice2:
+			if ok {
+				m.setRecivedVoice2(bitChanVoice2)
+				m.waitAnotherChan(chanVoice1, &m.voice1)
+			} else {
+				chanVoice2 = nil
 			}
-			m.setRecivedVoice2(bitChanVoice2)
-		case <-exit:
-			return
 		}
 
-		if m.isReadyToCompare() {
-			m.sendComparedVoice()
-		}
+		m.sendComparedVoice()
 
+	}
+}
+
+func (m *Mixer) waitAnotherChan(ch chan int, voice *VoiceBit) {
+	voice.received = true
+	if ch != nil {
+		bitVoice := <-ch
+		voice.volume = bitVoice
 	}
 }
 

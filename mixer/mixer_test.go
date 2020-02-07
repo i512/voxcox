@@ -46,16 +46,22 @@ func TestTwoChanelInput(t *testing.T) {
 	go m.Compare(ch1, ch2, exit, output)
 
 	go func() {
+		for i := 0; i < 100000; i++ {
+			ch2 <- 0
+		}
+
 		for i := 0; i < len(buffer2.Data); i++ {
 			ch2 <- buffer2.Data[i]
 		}
+		close(ch2)
 	}()
 
 	for i := 0; i < len(buffer1.Data); i++ {
 		ch1 <- buffer1.Data[i]
 	}
 
-	exit <- 1
+	close(ch1)
+
 	exit2 <- 1
 
 	<-exit2
@@ -63,10 +69,10 @@ func TestTwoChanelInput(t *testing.T) {
 }
 
 func chanelInitializer() (ch1, ch2, exit, exit2, output chan int) {
-	ch1 = make(chan int)
-	ch2 = make(chan int)
-	exit = make(chan int)
-	exit2 = make(chan int)
+	ch1 = make(chan int, 1000)
+	ch2 = make(chan int, 1000)
+	exit = make(chan int, 1000)
+	exit2 = make(chan int, 1000)
 	output = make(chan int, 1000)
 	return
 }
