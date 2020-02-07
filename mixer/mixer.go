@@ -41,8 +41,6 @@ func (m *Mixer) Compare(chanVoice1, chanVoice2, exit chan int, joinedVoices chan
 			m.setRecivedVoice2(bitChanVoice2)
 		case <-exit:
 			return
-		default:
-
 		}
 
 		if m.isReadyToCompare() {

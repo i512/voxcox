@@ -11,18 +11,68 @@ import (
 )
 
 func TestOneChanelInput(t *testing.T) {
-	ch1 := make(chan int)
-	ch2 := make(chan int)
-	exit := make(chan int)
-	exit2 := make(chan int)
-
-	output := make(chan int, 1000)
+	ch1, ch2, exit, exit2, output := chanelInitializer()
 
 	m := new(Mixer)
 	compressor := new(compressor.MockCompressorImpl)
 	m.audioCompressor = compressor
 
-	voice1, err1 := os.Open("../samples/Spanish vocal phrase.wav")
+	buffer1 := getBufferFromFile("../samples/Telephone prompt poss.wav", t)
+
+	go saveChanToFile(output, exit2, buffer1, t)
+	go m.Compare(ch1, ch2, exit, output)
+
+	for i := 0; i < len(buffer1.Data); i++ {
+		ch1 <- buffer1.Data[i]
+	}
+
+	exit <- 1
+	exit2 <- 1
+
+	<-exit2
+}
+
+func TestTwoChanelInput(t *testing.T) {
+	ch1, ch2, exit, exit2, output := chanelInitializer()
+
+	m := new(Mixer)
+	compressor := new(compressor.MockCompressorImpl)
+	m.audioCompressor = compressor
+
+	buffer1 := getBufferFromFile("../samples/Telephone prompt poss.wav", t)
+	buffer2 := getBufferFromFile("../samples/Spanish vocal phrase dollars-.wav", t)
+
+	go saveChanToFile(output, exit2, buffer1, t)
+	go m.Compare(ch1, ch2, exit, output)
+
+	go func() {
+		for i := 0; i < len(buffer2.Data); i++ {
+			ch2 <- buffer2.Data[i]
+		}
+	}()
+
+	for i := 0; i < len(buffer1.Data); i++ {
+		ch1 <- buffer1.Data[i]
+	}
+
+	exit <- 1
+	exit2 <- 1
+
+	<-exit2
+
+}
+
+func chanelInitializer() (ch1, ch2, exit, exit2, output chan int) {
+	ch1 = make(chan int)
+	ch2 = make(chan int)
+	exit = make(chan int)
+	exit2 = make(chan int)
+	output = make(chan int, 1000)
+	return
+}
+
+func getBufferFromFile(filePath string, t *testing.T) *audio.IntBuffer {
+	voice1, err1 := os.Open(filePath)
 	defer voice1.Close()
 
 	if err1 != nil {
@@ -36,18 +86,7 @@ func TestOneChanelInput(t *testing.T) {
 		t.Errorf("i can't extract buffer from file")
 	}
 
-	go saveChanToFile(output, exit2, buffer1, t)
-	go m.Compare(ch1, ch2, exit, output)
-
-	i := 0
-	for ; i < len(buffer1.Data); i++ {
-		ch1 <- buffer1.Data[i]
-	}
-
-	exit <- 1
-	exit2 <- 1
-
-	<-exit2
+	return buffer1
 
 }
 
