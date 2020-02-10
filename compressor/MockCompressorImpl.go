@@ -5,6 +5,6 @@ type MockCompressorImpl struct {
 }
 
 //Compress just return same value
-func (m MockCompressorImpl) Compress(notCompressedSound int) int {
+func (m MockCompressorImpl) Compress(notCompressedSound float64) float64 {
 	return notCompressedSound
 }

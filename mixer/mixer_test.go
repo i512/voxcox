@@ -22,9 +22,11 @@ func TestOneChanelInput(t *testing.T) {
 	go saveChanToFile(output, exit2, buffer1, t)
 	go m.Compare(ch1, ch2, output)
 
+	close(ch2)
 	for i := 0; i < len(buffer1.Data); i++ {
-		ch1 <- buffer1.Data[i]
+		ch1 <- float64(buffer1.Data[i])
 	}
+	close(ch1)
 
 	exit2 <- 1
 
@@ -45,18 +47,27 @@ func TestTwoChanelInput(t *testing.T) {
 	go m.Compare(ch1, ch2, output)
 
 	go func() {
+		for i := 0; i < len(buffer2.Data); i++ {
+			ch2 <- float64(buffer2.Data[i])
+		}
+
 		for i := 0; i < 100000; i++ {
 			ch2 <- 0
 		}
 
 		for i := 0; i < len(buffer2.Data); i++ {
-			ch2 <- buffer2.Data[i]
+			ch2 <- float64(buffer2.Data[i])
 		}
+
+		for i := 0; i < len(buffer2.Data); i++ {
+			ch2 <- float64(buffer2.Data[i])
+		}
+
 		close(ch2)
 	}()
 
 	for i := 0; i < len(buffer1.Data); i++ {
-		ch1 <- buffer1.Data[i]
+		ch1 <- float64(buffer1.Data[i])
 	}
 
 	close(ch1)
@@ -67,11 +78,11 @@ func TestTwoChanelInput(t *testing.T) {
 
 }
 
-func chanelInitializer() (ch1, ch2, exit2, output chan int) {
-	ch1 = make(chan int, 1000)
-	ch2 = make(chan int, 1000)
-	exit2 = make(chan int, 1000)
-	output = make(chan int, 1000)
+func chanelInitializer() (ch1, ch2, exit2, output chan float64) {
+	ch1 = make(chan float64, 1000)
+	ch2 = make(chan float64, 1000)
+	exit2 = make(chan float64, 1000)
+	output = make(chan float64, 1000)
 	return
 }
 
@@ -94,14 +105,14 @@ func getBufferFromFile(filePath string, t *testing.T) *audio.IntBuffer {
 
 }
 
-func saveChanToFile(input, exit chan int, buffer *audio.IntBuffer, t *testing.T) {
+func saveChanToFile(input, exit chan float64, buffer *audio.IntBuffer, t *testing.T) {
 	work := true
 	var data []int
 
 	for work {
 		select {
 		case in := <-input:
-			data = append(data, in)
+			data = append(data, int(in))
 		case <-exit:
 			work = false
 		}
@@ -154,7 +165,7 @@ func simpleCompareBuffer(voice1, voice2 *audio.IntBuffer) {
 
 }
 func simpleSaveToFile(buffer *audio.IntBuffer, t *testing.T) {
-	output, err := os.OpenFile("result.wav", os.O_RDWR|os.O_CREATE, 0755)
+	output, err := os.OpenFile(t.Name()+".wav", os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
 		t.Errorf("i can't save result file")
 	}

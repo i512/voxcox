@@ -9,16 +9,16 @@ type Mixer struct {
 	audioCompressor compressor.Compressor
 	voice1          VoiceBit
 	voice2          VoiceBit
-	outputChanel    chan<- int
+	outputChanel    chan<- float64
 }
 
 //VoiceBit use for storage value of voice in per time
 type VoiceBit struct {
-	volume int
+	volume float64
 }
 
 //Compare two voices to one
-func (m *Mixer) Compare(chanVoice1, chanVoice2 chan int, joinedVoices chan<- int) {
+func (m *Mixer) Compare(chanVoice1, chanVoice2 chan float64, joinedVoices chan<- float64) {
 
 	m.outputChanel = joinedVoices
 
@@ -49,7 +49,7 @@ func (m *Mixer) Compare(chanVoice1, chanVoice2 chan int, joinedVoices chan<- int
 	}
 }
 
-func (m *Mixer) waitAnotherChan(ch chan int, voice *VoiceBit) {
+func (m *Mixer) waitAnotherChan(ch chan float64, voice *VoiceBit) {
 	if ch != nil {
 		bitVoice := <-ch
 		voice.volume = bitVoice
@@ -60,14 +60,14 @@ func (m *Mixer) sendComparedVoice() {
 	m.outputChanel <- m.compareWithCompressor(m.voice1.volume, m.voice2.volume)
 }
 
-func (m *Mixer) compareWithCompressor(bitVoice1, bitVoice2 int) int {
+func (m *Mixer) compareWithCompressor(bitVoice1, bitVoice2 float64) float64 {
 	return m.audioCompressor.Compress(bitVoice1 + bitVoice2)
 }
 
-func (m *Mixer) setRecivedVoice1(volume int) {
+func (m *Mixer) setRecivedVoice1(volume float64) {
 	m.voice1.volume = volume
 }
 
-func (m *Mixer) setRecivedVoice2(volume int) {
+func (m *Mixer) setRecivedVoice2(volume float64) {
 	m.voice2.volume = volume
 }
