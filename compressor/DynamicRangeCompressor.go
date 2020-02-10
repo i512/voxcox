@@ -26,6 +26,7 @@ func NewDynamicRangeCompressor(threshold, compretionRatio float64, attack, relea
 		attackTimer:     attack,
 		release:         release,
 		compretionRatio: compretionRatio,
+		isInitialize:    true,
 	}
 }
 
