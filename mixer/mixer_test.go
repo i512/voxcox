@@ -11,7 +11,7 @@ import (
 )
 
 func TestOneChanelInput(t *testing.T) {
-	ch1, ch2, exit, exit2, output := chanelInitializer()
+	ch1, ch2, exit2, output := chanelInitializer()
 
 	m := new(Mixer)
 	compressor := new(compressor.MockCompressorImpl)
@@ -20,20 +20,19 @@ func TestOneChanelInput(t *testing.T) {
 	buffer1 := getBufferFromFile("../samples/Telephone prompt poss.wav", t)
 
 	go saveChanToFile(output, exit2, buffer1, t)
-	go m.Compare(ch1, ch2, exit, output)
+	go m.Compare(ch1, ch2, output)
 
 	for i := 0; i < len(buffer1.Data); i++ {
 		ch1 <- buffer1.Data[i]
 	}
 
-	exit <- 1
 	exit2 <- 1
 
 	<-exit2
 }
 
 func TestTwoChanelInput(t *testing.T) {
-	ch1, ch2, exit, exit2, output := chanelInitializer()
+	ch1, ch2, exit2, output := chanelInitializer()
 
 	m := new(Mixer)
 	compressor := new(compressor.MockCompressorImpl)
@@ -43,7 +42,7 @@ func TestTwoChanelInput(t *testing.T) {
 	buffer2 := getBufferFromFile("../samples/Spanish vocal phrase dollars-.wav", t)
 
 	go saveChanToFile(output, exit2, buffer1, t)
-	go m.Compare(ch1, ch2, exit, output)
+	go m.Compare(ch1, ch2, output)
 
 	go func() {
 		for i := 0; i < 100000; i++ {
@@ -68,10 +67,9 @@ func TestTwoChanelInput(t *testing.T) {
 
 }
 
-func chanelInitializer() (ch1, ch2, exit, exit2, output chan int) {
+func chanelInitializer() (ch1, ch2, exit2, output chan int) {
 	ch1 = make(chan int, 1000)
 	ch2 = make(chan int, 1000)
-	exit = make(chan int, 1000)
 	exit2 = make(chan int, 1000)
 	output = make(chan int, 1000)
 	return
