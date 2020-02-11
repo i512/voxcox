@@ -38,7 +38,7 @@ var _ = Describe("DynamicRangeCompressor", func() {
 
 		Expect(1.0).To(Equal(compressor.Compress(2.0)))
 		Expect(0.5).To(Equal(compressor.Compress(1.0)))
-		Expect(1.0).To(Equal(compressor.Compress(1.0)))
+		Expect(0.5).To(Equal(compressor.Compress(1.0)))
 		Expect(1.0).To(Equal(compressor.Compress(1.0)))
 		Expect(5.0).To(Equal(compressor.Compress(10.0)))
 		Expect(0.5).To(Equal(compressor.Compress(1.0)))

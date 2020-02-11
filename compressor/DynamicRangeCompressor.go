@@ -31,7 +31,7 @@ func NewDynamicRangeCompressor(threshold, compretionRatio float64, attack, relea
 }
 
 //Compress sound
-func (d DynamicRangeCompressor) Compress(notCompressedSound float64) float64 {
+func (d *DynamicRangeCompressor) Compress(notCompressedSound float64) float64 {
 
 	if !d.isInitialize {
 		panic("dynamicRangeCOmpressor must be initialized. Use NewCompressor function")
@@ -44,9 +44,10 @@ func (d DynamicRangeCompressor) Compress(notCompressedSound float64) float64 {
 		d.thresholHasBeenExceeded = true
 	}
 
-	if d.attackTimer == 0 && d.releaseTimer == 0 {
+	if d.attackTimer == 0 && d.releaseTimer == 0 && d.thresholHasBeenExceeded {
 		d.attackTimer = d.attack
 		d.thresholHasBeenExceeded = false
+		compressedSound = d.compressFunction(notCompressedSound)
 
 	} else if d.attackTimer == 0 && d.releaseTimer > 0 {
 		compressedSound = d.compressFunction(notCompressedSound)
@@ -59,6 +60,6 @@ func (d DynamicRangeCompressor) Compress(notCompressedSound float64) float64 {
 	return compressedSound
 }
 
-func (d DynamicRangeCompressor) compressFunction(notCompressedSound float64) float64 {
+func (d *DynamicRangeCompressor) compressFunction(notCompressedSound float64) float64 {
 	return notCompressedSound * d.compretionRatio
 }
