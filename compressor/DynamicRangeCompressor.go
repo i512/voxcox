@@ -33,7 +33,7 @@ func NewDynamicRangeCompressor(threshold, compretionRatio float64, attack, relea
 //Compress sound
 func (d *DynamicRangeCompressor) Compress(notCompressedSound float64) float64 {
 
-	if !d.isInitialize {
+	if d == nil || !d.isInitialize {
 		panic("dynamicRangeCOmpressor must be initialized. Use NewCompressor function")
 	}
 
