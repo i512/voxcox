@@ -58,5 +58,5 @@ var _ = Describe("DynamicRangeCompressor", func() {
 
 func TestCompressor(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Books Suite")
+	RunSpecs(t, "Compressor Suite")
 }

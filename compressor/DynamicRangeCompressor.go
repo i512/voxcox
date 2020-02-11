@@ -46,6 +46,7 @@ func (d DynamicRangeCompressor) Compress(notCompressedSound float64) float64 {
 
 	if d.attackTimer == 0 && d.releaseTimer == 0 {
 		d.attackTimer = d.attack
+		d.thresholHasBeenExceeded = false
 
 	} else if d.attackTimer == 0 && d.releaseTimer > 0 {
 		compressedSound = d.compressFunction(notCompressedSound)
